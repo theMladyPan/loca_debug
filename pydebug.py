@@ -34,9 +34,8 @@ class ItemViewer:
         for file in os.listdir(path):
             if file.endswith(".ply"):
                 filepath = os.path.join(path, file)
-                item = {}
+                item = {"pcd": o3d.io.read_point_cloud(filepath)}
 
-                item["pcd"] = o3d.io.read_point_cloud(filepath)
                 item["pcd"].paint_uniform_color(np.array([1, 0, 0]))
                 item["id"] = file.split(".")[0]
                 with open(os.path.join(path, file.split(".")[0] + ".dbg"), "r") as f:
@@ -49,11 +48,11 @@ class ItemViewer:
     def load_geometries_cbk(self, vis):
         path = tkinter.filedialog.askdirectory(title="Select rejected folder", 
                                         initialdir=DEBUG_FOLDER)
-        
+
         try:
             self.remove_current_item(vis)
         except Exception as e:
-            log.error("Could not remove current item: {}".format(e))
+            log.error(f"Could not remove current item: {e}")
         if path:
             self.load_geometries(path)
         else:
@@ -64,8 +63,7 @@ class ItemViewer:
         parameters = {}
         log.info("Computing statistics...")
         for item in self.geometries:
-            text = item.get("text", "")
-            if text:
+            if text := item.get("text", ""):
                 params = text.split("\n")
                 for param_line in params:
                     if ":" in param_line:
@@ -90,10 +88,7 @@ class ItemViewer:
     def toggle_background(self, vis):
         opt = vis.get_render_option()
         bg_color = opt.background_color
-        if bg_color.all():
-            new_color = np.array([0, 0, 0])
-        else:
-            new_color = np.array([1, 1, 1])
+        new_color = np.array([0, 0, 0]) if bg_color.all() else np.array([1, 1, 1])
         opt.background_color = new_color
         return False
     
@@ -195,7 +190,7 @@ class ItemViewer:
         try:
             vis.get_render_option().load_from_json("viewpoint.json")
         except Exception as e:
-            log.warning("Could not load viewpoint: {}".format(e))
+            log.warning(f"Could not load viewpoint: {e}")
 
         vis.run()
         vis.destroy_window()
